@@ -13,6 +13,7 @@ class Game extends Model
         'name',
         'access_code',
         'user_id',
+        'status',
     ];
 
     public function participants()

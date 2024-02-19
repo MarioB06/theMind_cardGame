@@ -13,6 +13,7 @@ class CreateGamesTable extends Migration
             $table->string('access_code')->unique();
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
+            $table->string('status')->default('pending');
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
