@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,6 +27,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/games/create', [GameController::class, 'create'])->name('games.create');
+    Route::post('/games/join', [GameController::class, 'join'])->name('games.join');
+    Route::get('/game/{id}', [GameController::class, 'show'])->name('game.show');
+
 });
 
 require __DIR__.'/auth.php';
