@@ -28,3 +28,30 @@
 </body>
 
 </x-app-layout>
+
+<script>
+        // Stellen Sie eine Verbindung zum WebSocket-Server her
+    const webSocket = new WebSocket('ws://localhost:6001');
+
+    // Reagieren Sie auf die Ereignisse der WebSocket-Verbindung
+    webSocket.onopen = function(event) {
+        console.log('WebSocket connection opened');
+    };
+
+    webSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.event === 'game.updated') {
+            // Hier können Sie die Seite aktualisieren oder andere Aktionen ausführen, wenn das Spiel aktualisiert wurde
+            console.log('Das Spiel wurde aktualisiert:', data.game_id);
+        }
+    };
+
+    webSocket.onerror = function(event) {
+        console.error('WebSocket error:', event);
+    };
+
+    webSocket.onclose = function(event) {
+        console.log('WebSocket connection closed');
+    };
+
+</script>

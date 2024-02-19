@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 use Illuminate\Http\Request;
 use App\Models\Game;
-
+use BeyondCode\LaravelWebSockets\WebSockets\Channels\ChannelManager;
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsBroadcaster;
 class GameController extends Controller
 {
     public function create(Request $request)
@@ -40,24 +43,28 @@ class GameController extends Controller
     public function join(Request $request)
     {
         $roomCode = $request->input('room_code');
-        
+    
         $game = Game::where('access_code', $roomCode)->first();
-        
+    
         if (!$game) {
             return redirect()->back()->with('error', 'Spiel nicht gefunden.');
         }
-        
+    
         if ($game->participants->count() >= 4) {
             return redirect()->back()->with('error', 'Das Spiel hat bereits die maximale Anzahl von Spielern erreicht.');
         }
-        
-        $game->participants()->attach(auth()->id());
-        
-        $this->checkAndUpdateGameStatus($game);
-        
+    
+        $game->participants()->attach(Auth::id());
+    
+        $channelManager = app(ChannelManager::class);
+    
+        $channelManager->broadcastToChannel('game.' . $game->id, [
+            'event' => 'game.updated',
+            'game_id' => $game->id,
+        ]);
+    
         return redirect()->route('game.show', $game->id)->with('success', 'Erfolgreich dem Spiel beigetreten!');
     }
-    
     private function checkAndUpdateGameStatus(Game $game)
     {
         if ($game->participants->count() >= 4) {
