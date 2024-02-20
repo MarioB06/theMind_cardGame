@@ -5,7 +5,28 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Game Room</title>
         <!-- Lade das Pusher JavaScript SDK -->
-        <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+        <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+        <script>
+            Pusher.logToConsole = true;
+            // Erstelle eine neue Pusher-Instanz mit deinen Pusher-Anmeldeinformationen
+            const pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
+                cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+                encrypted: true
+            });
+
+            // Abonniere den Pusher-Kanal für das aktuelle Spiel
+            const channel = pusher.subscribe('theMIndCardGame-{{ $game->id }}');
+
+            // Reagiere auf Ereignisse auf dem Pusher-Kanal
+            channel.bind('game.updated', function (data) {
+                // Hier kannst du eine Konsolenausgabe verwenden, um zu überprüfen, ob das Ereignis ausgelöst wurde
+                console.log('Event "game.updated" empfangen:', data);
+                
+                // Aktualisiere die Seite
+                location.reload();
+            });
+        </script>
+
     </head>
 
     <body>
@@ -34,22 +55,6 @@
 
 </x-app-layout>
 
-<!-- Lade und binde das Pusher JavaScript SDK -->
-<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
-<script>
-    // Erstelle eine neue Pusher-Instanz mit deinen Pusher-Anmeldeinformationen
-    const pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
-        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-        encrypted: true
-    });
 
-    // Abonniere den Pusher-Kanal für das aktuelle Spiel
-    const channel = pusher.subscribe('{{ $game->id }}');
 
-    // Reagiere auf Ereignisse auf dem Pusher-Kanal
-    channel.bind('game.updated', function (data) {
-        // Aktualisiere die Benutzeroberfläche basierend auf den erhaltenen Daten
-        // Zum Beispiel kannst du den Spielstatus überprüfen und die Seite aktualisieren
-        location.reload(); // Aktualisiere die Seite, wenn ein Spiel aktualisiert wird
-    });
-</script>
+

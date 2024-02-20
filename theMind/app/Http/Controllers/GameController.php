@@ -53,12 +53,12 @@ class GameController extends Controller
 
         $game->participants()->attach(Auth::id());
 
-        $this->sendPusherEvent('game.updated', ['game_id' => $game->id]);
+        $this->sendPusherEvent('game.updated', ['game_id' => $game->id], $game);
 
         return redirect()->route('game.show', $game->id)->with('success', 'Erfolgreich dem Spiel beigetreten!');
     }
 
-    private function sendPusherEvent($event, $data)
+    private function sendPusherEvent($event, $data, Game $game)
     {
         $options = [
             'cluster' => 'eu',
@@ -72,7 +72,9 @@ class GameController extends Controller
             $options
         );
 
-        $pusher->trigger('theMIndCardGame', $event, $data);
+        $channelName = 'theMIndCardGame-' . $game->id;
+        $pusher->trigger($channelName, $event, $data);
+
     }
 
     public function show($id)
