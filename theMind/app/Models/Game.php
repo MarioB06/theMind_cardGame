@@ -20,4 +20,9 @@ class Game extends Model
     {
         return $this->belongsToMany(User::class, 'game_participants');
     }
+
+    public function cards()
+    {
+        return $this->hasOne(Card::class);
+    }
 }
