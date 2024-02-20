@@ -30,7 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/games/create', [GameController::class, 'create'])->name('games.create');
     Route::post('/games/join', [GameController::class, 'join'])->name('games.join');
     Route::get('/game/{id}', [GameController::class, 'show'])->name('game.show');
-    Route::get('/game/{game}/start', [GameController::class, 'start'])->name('game.start');
+    Route::post('/game/{game}/start', [GameController::class, 'start'])->name('game.start');
+    
 
 });
 

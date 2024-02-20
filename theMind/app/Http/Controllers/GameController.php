@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Card;
 use Pusher\Pusher;
-use App\Http\Controllers\DB;
+use Illuminate\Support\Facades\DB;
 
 
 class GameController extends Controller
@@ -15,28 +15,28 @@ class GameController extends Controller
     public function create(Request $request)
     {
         $accessCode = $this->generateUniqueAccessCode();
-    
+
         // Spiel erstellen und in games-Tabelle eintragen
         $game = Game::create([
             'access_code' => $accessCode,
             'user_id' => auth()->id(),
         ]);
-    
+
         // Alle Karten für das Spiel in der cards-Tabelle erstellen
         $this->createCardsForGame($game);
-    
+
         // Spieler zum Spiel hinzufügen und Karte zuweisen
         $this->addParticipantAndAssignCard($game);
-    
+
         // Pusher-Event auslösen
         if ($game->participants->count() >= 4) {
             $game->update(['status' => 'started']);
             $this->sendPusherEvent('game.created', ['game_id' => $game->id], $game);
         }
-    
+
         return redirect()->route('game.show', $game->id)->with('success', 'Spiel erfolgreich erstellt und beigetreten!');
     }
-    
+
     private function createCardsForGame(Game $game)
     {
         // Alle Karten für das Spiel erstellen und in cards-Tabelle eintragen
@@ -46,27 +46,37 @@ class GameController extends Controller
         }
         $game->cards()->create($cards);
     }
-    
+
     private function addParticipantAndAssignCard(Game $game)
     {
         // Den aktuellen Benutzer als Teilnehmer hinzufügen
         $game->participants()->attach(Auth::id());
-    
+
         // Eine Karte für den Teilnehmer auswählen und zuweisen
         $cardNumber = $this->getAvailableCardNumber($game);
         $game->participants()->updateExistingPivot(Auth::id(), ['card_number' => $cardNumber]);
-    
+
         // Markiere die zugewiesene Karte als vergeben (false)
         $game->cards()->update(['card_' . $cardNumber => false]);
     }
-    
+
     private function getAvailableCardNumber(Game $game)
     {
+        $randomCardNumber = rand(1, 100);
 
-        return 1;
+        $assignedCard = DB::table('game_participants')
+            ->where('game_id', $game->id)
+            ->where('card_number', $randomCardNumber)
+            ->exists();
+
+        if ($assignedCard) {
+            return $this->getAvailableCardNumber($game);
+        }
+
+        return $randomCardNumber;
     }
-    
-    
+
+
 
     private function generateUniqueAccessCode()
     {
@@ -91,12 +101,14 @@ class GameController extends Controller
             return redirect()->back()->with('error', 'Das Spiel hat bereits die maximale Anzahl von Spielern erreicht.');
         }
 
-        $game->participants()->attach(Auth::id());
+        // Spieler zum Spiel hinzufügen und Karte zuweisen
+        $this->addParticipantAndAssignCard($game);
 
         $this->sendPusherEvent('game.updated', ['game_id' => $game->id], $game);
 
         return redirect()->route('game.show', $game->id)->with('success', 'Erfolgreich dem Spiel beigetreten!');
     }
+
 
     private function sendPusherEvent($event, $data, Game $game)
     {
@@ -120,21 +132,24 @@ class GameController extends Controller
     public function show($id)
     {
         $game = Game::findOrFail($id);
-
-        return view('game.show', compact('game'));
+        $userCardNumber = $game->participants()->where('user_id', auth()->id())->value('card_number');
+    
+        return view('game.show', compact('game', 'userCardNumber'));
     }
+    
 
     public function start(Game $game)
     {
-        $gameId = $game->id;
-
         $game->update(['status' => 'started']);
 
         $this->sendPusherEvent('game.started', ['game_id' => $game->id], $game);
+
+        return redirect()->route('game.show', $game->id);
     }
 
-    private function get_card()
-    {
 
-    }
+
+
+
+
 }
