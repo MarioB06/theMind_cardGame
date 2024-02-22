@@ -22,7 +22,7 @@
                 location.reload();
             });
 
-            
+
         </script>
 
 
@@ -33,7 +33,7 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    
+
                 @if($game->status === 'pending')
 
                     <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -54,21 +54,42 @@
                             <p>{{ __('Anzahl der Spieler: ') }} {{ $game->participants->count() }}</p>
                         </div>
                     </div>
-                
-                @else 
 
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <p>Das Spiel hat gestartet!</p>
-    
-                        @if($userCardNumber)
-                            <p>Deine Kartennummer: {{ $userCardNumber }}</p>
+                @elseif($game->status === 'started')
+
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+
+                @if($userCardNumber)
+
+                        <p>Karte auf dem Tisch: {{ $lastPlayedCard->card }}</p>
+                        <p>Deine Kartennummer: {{ $userCardNumber }}</p>
+                        <?php
+                        $user = auth()->user();
+                        ?>
+                        @if($lastPlayedCard->card < $userCardNumber)
+                        <form action="{{ route('game.play', $game->id) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                                Karte spielen
+                            </button>
+                        </form>
+                        @endif
                         @else
                             <p>Du hast keine Karte zugewiesen bekommen.</p>
                         @endif
                     </div>
+                @elseif($game->status === 'lost')
 
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <p>Verloren</p>
+                    </div>
+                @elseif($game->status === 'won')
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <p>Bravo, ihr habt es geschafft. Gute Zusammenarbeit</p>
+                    </div>
                 @endif
-                
+
                 </div>
             </div>
         </div>

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Card;
+use App\Models\LastPlayedCard;
 use Pusher\Pusher;
 use Illuminate\Support\Facades\DB;
 
@@ -16,19 +17,20 @@ class GameController extends Controller
     {
         $accessCode = $this->generateUniqueAccessCode();
 
-        // Spiel erstellen und in games-Tabelle eintragen
         $game = Game::create([
             'access_code' => $accessCode,
             'user_id' => auth()->id(),
         ]);
 
-        // Alle Karten für das Spiel in der cards-Tabelle erstellen
+        LastPlayedCard::create([
+            'game_id' => $game->id,
+            'card' => 0,
+        ]);
+
         $this->createCardsForGame($game);
 
-        // Spieler zum Spiel hinzufügen und Karte zuweisen
         $this->addParticipantAndAssignCard($game);
 
-        // Pusher-Event auslösen
         if ($game->participants->count() >= 4) {
             $game->update(['status' => 'started']);
             $this->sendPusherEvent('game.created', ['game_id' => $game->id], $game);
@@ -39,24 +41,20 @@ class GameController extends Controller
 
     private function createCardsForGame(Game $game)
     {
-        // Alle Karten für das Spiel erstellen und in cards-Tabelle eintragen
         $cards = [];
         for ($i = 1; $i <= 100; $i++) {
-            $cards['card_' . $i] = true; // Alle Karten sind zunächst verfügbar
+            $cards['card_' . $i] = true;
         }
         $game->cards()->create($cards);
     }
 
     private function addParticipantAndAssignCard(Game $game)
     {
-        // Den aktuellen Benutzer als Teilnehmer hinzufügen
         $game->participants()->attach(Auth::id());
 
-        // Eine Karte für den Teilnehmer auswählen und zuweisen
         $cardNumber = $this->getAvailableCardNumber($game);
         $game->participants()->updateExistingPivot(Auth::id(), ['card_number' => $cardNumber]);
 
-        // Markiere die zugewiesene Karte als vergeben (false)
         $game->cards()->update(['card_' . $cardNumber => false]);
     }
 
@@ -101,7 +99,6 @@ class GameController extends Controller
             return redirect()->back()->with('error', 'Das Spiel hat bereits die maximale Anzahl von Spielern erreicht.');
         }
 
-        // Spieler zum Spiel hinzufügen und Karte zuweisen
         $this->addParticipantAndAssignCard($game);
 
         $this->sendPusherEvent('game.updated', ['game_id' => $game->id], $game);
@@ -133,16 +130,59 @@ class GameController extends Controller
     {
         $game = Game::findOrFail($id);
         $userCardNumber = $game->participants()->where('user_id', auth()->id())->value('card_number');
-    
-        return view('game.show', compact('game', 'userCardNumber'));
+        $lastPlayedCard = LastPlayedCard::where('game_id', $game->id)->latest()->first();
+        return view('game.show', compact('game', 'userCardNumber', 'lastPlayedCard'));
     }
-    
+
 
     public function start(Game $game)
     {
         $game->update(['status' => 'started']);
 
         $this->sendPusherEvent('game.started', ['game_id' => $game->id], $game);
+
+        return redirect()->route('game.show', $game->id);
+    }
+
+
+    public function playCard(Request $request, Game $game)
+    {
+        $playedCardNumber = $game->participants()->where('user_id', auth()->id())->value('card_number');
+
+        $lastPlayedCard = LastPlayedCard::where('game_id', $game->id)->latest()->first();
+
+        if ($lastPlayedCard) {
+
+            $lastPlayedCard_value = $lastPlayedCard->card;
+
+            if($lastPlayedCard_value > $playedCardNumber)
+            {
+                $game->update(['status' => 'lost']);
+
+                $this->sendPusherEvent('game.updated', ['game_id' => $game->id], $game);
+
+                return redirect()->route('game.show', $game->id);
+            }
+            $lastPlayedCard->update(['card' => $playedCardNumber]);
+        } else {
+            LastPlayedCard::create([
+                'game_id' => $game->id,
+                'card' => $playedCardNumber,
+            ]);
+        }
+
+        $game->increment('players_played');
+
+        if($game->players_played < 4)
+        {
+            $game->update(['status' => 'won']);
+
+        }
+
+        $user = auth()->user();
+        $game->participants()->where('user_id', $user->id)->update(['card_played' => true]);
+
+        $this->sendPusherEvent('game.updated', ['game_id' => $game->id], $game);
 
         return redirect()->route('game.show', $game->id);
     }
