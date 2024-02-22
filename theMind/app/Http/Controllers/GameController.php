@@ -173,7 +173,7 @@ class GameController extends Controller
 
         $game->increment('players_played');
 
-        if($game->players_played < 4)
+        if($game->players_played === 4)
         {
             $game->update(['status' => 'won']);
 
