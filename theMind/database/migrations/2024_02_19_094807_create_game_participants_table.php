@@ -13,11 +13,13 @@ class CreateGameParticipantsTable extends Migration
             $table->unsignedBigInteger('game_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
-
+    
             $table->foreign('game_id')->references('id')->on('games')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->integer('card_number')->nullable();
-            $table->boolean('card_played')->default(false);
+            $table->integer('card_number_1')->nullable();
+            $table->integer('card_number_2')->nullable();
+            $table->boolean('card_1_played')->default(false);
+            $table->boolean('card_2_played')->default(false);
         });
     }
 
