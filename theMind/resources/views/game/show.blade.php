@@ -29,6 +29,23 @@
 
     </head>
 
+    <style>
+        .card {
+            width: 150px;
+            height: 200px;
+            background-color: lightgray;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+
     <body>
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -62,7 +79,15 @@
                 @if($userCardNumber)
 
                         <p>Karte auf dem Tisch: {{ $lastPlayedCard->card }}</p>
-                        <p>Deine Kartennummer: {{ $userCardNumber }}</p>
+                        
+                        <br>
+
+                        <div class="card">
+                            <div class="card-number">{{ $userCardNumber }}</div>
+                        </div>
+
+                        <br>
+
                         <?php
                         $user = auth()->user();
                         ?>
