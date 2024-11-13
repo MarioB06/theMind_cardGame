@@ -14,30 +14,7 @@ Dies ist eine Online-Version des Kartenspiels "The Mind", das ursprünglich als 
 - **Echtzeitkommunikation**: Nutze WebSockets für eine nahtlose Echtzeitkommunikation zwischen den Spielern.
 - **Benutzerprofile**: Verfolge deine Statistiken und deinen Fortschritt im Spiel mit benutzerdefinierten Profilen.
 
-## Installation und Nutzung
-
-Um das Spiel zu spielen, führe die folgenden Schritte aus:
-
-1. Klone das Repository auf deinen Computer:
-
-   ```bash
-   git clone https://github.com/dein_benutzername/theMind_cardGame.git
-
-2. Navigiere in das Projektverzeichnis:
-   ```bash
-   cd theMind_cardGame
-
-3. Installiere die erforderlichen Abhängigkeiten:
-   ```bash
-   composer install
-   npm install
-
-4. Konfiguriere deine Umgebung, einschließlich der WebSocket-Verbindung und der Datenbankverbindung, indem du die entsprechenden Parameter in der `.env-Datei` anpasst.
-5. Führe die Migrationen aus, um die Datenbanktabellen zu erstellen:
-   ```bash
-   php artisan migrate
-   
 ## Contributing
 
-Wir freuen uns über Beiträge! Wenn du Verbesserungsvorschläge hast oder Fehler gefunden hast, zögere nicht, einen Pull-Request zu erstellen oder ein Issue zu öffnen.
+Ich freue mich über Beiträge! Wenn du Verbesserungsvorschläge hast oder Fehler gefunden hast, zögere nicht, einen Pull-Request zu erstellen oder ein Issue zu öffnen.
 
